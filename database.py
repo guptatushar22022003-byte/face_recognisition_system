@@ -65,8 +65,8 @@ def mark_attendance(user_id, name):
     date_str = now.strftime("%Y-%m-%d")
     time_str = now.strftime("%H:%M:%S")
     
-    # Check if there is a record for this user TODAY
-    cursor.execute("SELECT * FROM daily_attendance WHERE user_id = ? AND date = ?", (user_id, date_str))
+    # Check if there is a record for this user TODAY (Get the latest one)
+    cursor.execute("SELECT * FROM daily_attendance WHERE user_id = ? AND date = ? ORDER BY id DESC LIMIT 1", (user_id, date_str))
     record = cursor.fetchone()
     
     status_message = ""
@@ -97,18 +97,28 @@ def mark_attendance(user_id, name):
 
         diff = (now - last_updated).total_seconds()
         
+
         if diff < 60: # 1 Minute Cooldown
             conn.close()
             return None # Too soon to toggle
             
         # If cooldown passed:
-        # If Time Out is NULL -> Set Time Out
-        # If Time Out is SET -> Update Time Out (User leaving later)
+        # If Time Out is NULL -> Set Time Out (Check Out)
+        # If Time Out is SET -> Create NEW record (Check In again)
         
-        cursor.execute("UPDATE daily_attendance SET time_out = ?, last_updated = ? WHERE id = ?", 
-                       (time_str, now, record[0]))
-        conn.commit()
-        status_message = f"Time Out: {time_str}"
+        if record[5]: # time_out is not None, so they are already checked out.
+             # Create NEW Session (Time In)
+            cursor.execute("INSERT INTO daily_attendance (user_id, name, date, time_in, last_updated) VALUES (?, ?, ?, ?, ?)", 
+                           (user_id, name, date_str, time_str, now))
+            conn.commit()
+            status_message = f"Time In: {time_str}"
+        else:
+            # Still checked in, so Check Out
+            cursor.execute("UPDATE daily_attendance SET time_out = ?, last_updated = ? WHERE id = ?", 
+                           (time_str, now, record[0]))
+            conn.commit()
+            status_message = f"Time Out: {time_str}"
+            
         conn.close()
         return status_message
 
@@ -117,6 +127,20 @@ def get_attendance_logs():
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     cursor.execute("SELECT name, date, time_in, time_out FROM daily_attendance ORDER BY date DESC, time_in DESC LIMIT 50")
+    logs = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+    return logs
+
+def get_user_attendance(user_id):
+    conn = sqlite3.connect(DB_NAME)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT date, time_in, time_out 
+        FROM daily_attendance 
+        WHERE user_id = ? 
+        ORDER BY date DESC, time_in DESC
+    """, (user_id,))
     logs = [dict(row) for row in cursor.fetchall()]
     conn.close()
     return logs

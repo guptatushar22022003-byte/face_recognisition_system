@@ -221,6 +221,38 @@
                 </div>
             </div>
 
+            <!-- Registered Users List -->
+            <div class="glass-panel rounded-2xl p-6 flex flex-col">
+                <h3 class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-4">Registered Users</h3>
+                <div class="flex-1 overflow-y-auto scrollbar-hide space-y-2 max-h-60">
+                    {% if users %}
+                    {% for id, name in users.items() %}
+                    <a href="/user/{{ id }}"
+                        class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition group border border-transparent hover:border-white/5">
+                        <div
+                            class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition shadow-lg shadow-black/20">
+                            {{ name[0] | upper }}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="text-sm font-medium text-slate-300 group-hover:text-white truncate">{{ name }}
+                            </div>
+                            <div class="text-[10px] text-slate-500 font-mono">ID: {{ id }}</div>
+                        </div>
+                        <svg class="w-4 h-4 text-slate-600 group-hover:text-blue-400 transition" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </a>
+                    {% endfor %}
+                    {% else %}
+                    <div
+                        class="text-sm text-slate-500 p-2 text-center border border-dashed border-slate-700 rounded-lg">
+                        No users registered.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
             <!-- Logs List -->
             <div class="flex-1 glass-panel rounded-2xl flex flex-col overflow-hidden">
                 <div class="p-5 border-b border-white/5 bg-slate-800/30">

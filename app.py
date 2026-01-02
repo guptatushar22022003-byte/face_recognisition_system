@@ -27,7 +27,15 @@ def get_logs():
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    users = database.get_all_users()
+    return render_template('index.html', users=users)
+
+@app.route('/user/<int:user_id>')
+def user_dashboard(user_id):
+    users = database.get_all_users()
+    name = users.get(user_id, "Unknown")
+    logs = database.get_user_attendance(user_id)
+    return render_template('user_dashboard.html', user_id=user_id, name=name, logs=logs)
 
 @app.route('/api/logs')
 def api_logs():

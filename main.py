@@ -1,4 +1,9 @@
-import cv2
+try:
+    import cv2
+except ImportError:
+    print("[ERROR] 'cv2' module not found. Please install it using:")
+    print("pip install opencv-python opencv-contrib-python")
+    exit(1)
 import os
 import numpy as np
 import json
